@@ -19,7 +19,7 @@ def lib( client ):
 	return map( lambda x : client.document_details( x )  , map( lambda x: x['id'],  A ) )
 
 def write( file, data):
-	f = open('./' + file, 'w')
+	f = open('../' + file, 'w')
 	f.write( json.dumps( data ) )
 	f.close()
 
@@ -58,12 +58,12 @@ been = []
 results = {}
 
 for tag in tags:
-        f = filter( lambda d : tag in d['tags'], A )
+        f = filter( lambda d : tag in d['tags'], own )
         ## add items as been already
         map( lambda d: been.append( d['id'] ) , f )
         results[tag] = f
 
-f = filter( lambda d : d['id'] not in been , A )
+f = filter( lambda d : d['id'] not in been , own )
 results['others'] = f
 
 write('my.json', results)
