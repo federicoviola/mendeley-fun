@@ -1,0 +1,113 @@
+<html>
+
+<head>
+	<script src="http://d3js.org/d3.v3.min.js"></script>
+	<script src="https://raw.github.com/jasondavies/d3-cloud/master/d3.layout.cloud.js"></script>
+	<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+	<script src="https://raw.github.com/documentcloud/underscore/master/underscore-min.js"></script>
+</head>
+
+<style type="text/css">
+  li.data-source {
+    float: left;
+    margin-left: 10px;
+    border: 2px solid black;
+    padding: 4px;
+  }
+  #data-menu {
+	margin-bottom: 20px;
+  }
+</style>
+
+<body>
+
+<ul id='data-menu'>
+<li class='data-source' data-url='../latest.json'>Latest read</li>
+<li class='data-source' data-url='../star.json'>Papers I liked</li>
+<li class='data-source' data-url='../my-all.json'>Written by me</li>
+</ul>
+
+<div style="clear: both;"></div>
+
+<div id='visu'></div>
+
+<script>
+
+$().ready( function() {
+  $('.data-source').on('click', function() {
+    var d = $(this).data('url');
+    load( d, $(this) );
+  });
+
+  load( '../latest.json' )
+})
+
+var load = function( url, dom ) {
+
+  // clear
+  $('#visu').html('');
+
+	$.get( url , function(data) {
+		data = _.map( data, function(e) {
+			return e.title.split(' ');
+		} );
+
+    var counted = _.countBy( _.flatten( data ) , function(w){
+      return w.toLowerCase();
+    } );
+
+    var bad = 'and,for,the,of,a,an,in,on,by,as,at,or'.split(',');
+
+    var mapped = [];
+    _.map( counted, function(v, k) {
+      if( _.indexOf( bad, k ) > -1 ) return;
+      mapped.push( { text: k, size: v } );
+    } );
+
+    var max = _.max( _.values( mapped ) );
+    draw( mapped, max );
+    console.log( 'Hello' );
+  } );
+};
+
+var draw = function(words, max) {
+
+      var fontSize = d3.scale['sqrt']().range([5, 50]);
+
+  d3.layout.cloud().size([750, 750])
+      .words( words )
+      .rotate(function() { return ~~(Math.random() * 2) * 90; })
+      .font("Impact")
+      .fontSize(function(d) { return fontSize(d.size); })
+      .on("end", draw)
+      .padding(1)
+      .start();
+
+  function draw(words) {
+
+    var fill = d3.scale.category20b();
+
+    d3.select("#visu").append("svg")
+        .attr("width", 900)
+        .attr("height", 900)
+      .append("g")
+        .attr("transform", "translate(150,150)")
+      .selectAll("text")
+        .data(words)
+      .enter().append("text")
+        .style("font-size", function(d) { return d.size + "px"; })
+        .style("font-family", "Impact")
+        .style("fill", function(d) { return fill(d.text.toLowerCase()); })
+        .attr("text-anchor", "middle")
+        .attr("transform", function(d) {
+          return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+        })
+        .text(function(d) { return d.text; });
+  }
+
+}
+</script>
+
+</body>
+
+</html>
